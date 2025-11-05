@@ -13,11 +13,43 @@ const patterns = [
   /ACCESS_TOKEN/i
 ];
 
+// Fichiers et dossiers à ignorer (ne contiennent que de la documentation/exemples)
+const excludedPaths = [
+  'node_modules',
+  '.git',
+  'dist',
+  '.env.example',        // Template sans vraies valeurs
+  'README.md',
+  'DEPLOIEMENT_NETLIFY.md',
+  'DEPLOIEMENT_ALTERNATIF.md',
+  'DEPANNAGE_NETLIFY_404.md',
+  'CONFORMITE_DEPLOIEMENT.md',
+  'INSTRUCTIONS_PUSH_NOUVEAU_COMPTE.md',
+  'docs',                // Dossier documentation
+  'scripts/scan-secrets.js',  // Ce script lui-même
+  '.githooks',           // Git hooks
+  '.gitignore',          // Gitignore
+  'package.json',        // Package.json
+  '.github/workflows'    // GitHub Actions
+];
+
+function shouldExclude(filePath) {
+  const relativePath = path.relative(repoRoot, filePath);
+  return excludedPaths.some(excluded => 
+    relativePath.includes(excluded) || 
+    relativePath.endsWith('.md') ||
+    relativePath.endsWith('.example')
+  );
+}
+
 function scanDir(dir) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   for (const e of entries) {
-    if (e.name === 'node_modules' || e.name === '.git') continue;
     const full = path.join(dir, e.name);
+    
+    // Ignorer les fichiers/dossiers exclus
+    if (shouldExclude(full)) continue;
+    
     if (e.isDirectory()) {
       scanDir(full);
     } else {
